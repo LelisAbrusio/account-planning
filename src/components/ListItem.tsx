@@ -3,8 +3,12 @@ import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 interface Item {
+  id: number,
+  condid: string;
   name: string;
-  description: string;
+  type: string;
+  entries: boolean;
+  children: Item[];
 }
 
 interface ListItemProps {
@@ -16,8 +20,7 @@ const ListItem: React.FC<ListItemProps> = ({ item, onDelete }) => {
   return (
     <View style={styles.itemContainer}>
       <View style={styles.textContainer}>
-        <Text style={styles.itemText}>{item.name}</Text>
-        <Text style={styles.itemText}>{item.description}</Text>
+        <Text style={styles.itemText}>{item.condid + ' — ' + item.name}</Text>
       </View>
       <TouchableOpacity onPress={onDelete}>
         <Icon name="delete" size={24} color="#000" />

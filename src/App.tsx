@@ -1,35 +1,31 @@
 import React, { useState, useRef } from 'react';
 import { SafeAreaView, FlatList, StyleSheet, View, Text } from 'react-native';
-/*import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp  } from '@react-navigation/stack';*/
 import SearchField from './components/SearchField';
 import AddButton from './components/AddButton';
 import ItemsList from './components/ItemsList';
-import ItemForm from './components/ItemForm'; // import the ItemForm component
+import ItemForm from './components/ItemForm';
 
 interface Item {
+  id: number,
+  condid: string;
   name: string;
-  description: string;
+  type: string;
+  entries: boolean;
+  children: Item[];
 }
 
-/*type StackNavigatorParams = {
-  Home: undefined; // This screen does not accept any parameters
-  Form: undefined; // This screen does not accept any parameters
-};*/
 
 const initialItems: Item[] = [
-  { name: 'Item 1', description: 'This is item 1' },
-  { name: 'Item 2', description: 'This is item 2' },
+  { id: 1, condid: '1', name: 'Receitas', type: 'Receita', entries: false, children: []},
+  { id: 2, condid: '2', name: 'Despesas', type: 'Despesa', entries: false, children: []}
 ];
 
 const App: React.FC = () => {
   const [items, setItems] = useState(initialItems);
   const [searchText, setSearchText] = useState('');
   const flatListRef = useRef<FlatList>(null);
-  const [isFormVisible, setIsFormVisible] = useState(false); // new state for showing or hiding the form
+  const [isFormVisible, setIsFormVisible] = useState(false);
 
-
-  //const navigation = useNavigation<StackNavigationProp<StackNavigatorParams, 'Home'>>();
 
   const handleSearch = (text: string) => {
     setSearchText(text);
@@ -42,24 +38,42 @@ const App: React.FC = () => {
 
   const itemLimit = 5;
 
-  /*const addItem = () => {
-    const newItem = { name: `Item ${items.length + 1}`, description: `This is item ${items.length + 1}` };
-    setItems(prevItems => {
-      const updatedItems = [...prevItems, newItem];
-      if (updatedItems.length > itemLimit) {
-        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 50);
-      }
-      return updatedItems;
-    });
-    //navigation.navigate('Form');
-  };*/
+  const flattenItems = (items: Item[]): Item[] => {
+    return items.reduce((acc: Item[], item) => {
+      return [...acc, item, ...flattenItems(item.children)];
+    }, []);
+  };
 
-  const addItem = (newItem: { name: string; description: string }) => {
-    setItems(prevItems => [...prevItems, newItem]);
+  const addItemToChildren = (items: Item[], newItem: Item, parentId: number): Item[] => {
+    return items.map(item => {
+      if (item.id === parentId) {
+        return {
+          ...item,
+          children: [...item.children, newItem]
+        };
+      } else if (item.children.length) {
+        return {
+          ...item,
+          children: addItemToChildren(item.children, newItem, parentId)
+        };
+      } else {
+        return item;
+      }
+    });
+  };
+
+  const addItem = (newItem: Item, parentItem: Item | null) => {
+    if (parentItem) {
+      setItems(prevItems => {
+        return addItemToChildren(prevItems, newItem, parentItem.id);
+      });
+    } else {
+      setItems(prevItems => [...prevItems, newItem]);
+    }
     if (items.length + 1 > itemLimit) {
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 50);
     }
-    setIsFormVisible(false); // close the form when done
+    setIsFormVisible(false);
   };
 
   const handleDelete = (itemToDelete: Item) => {
@@ -77,11 +91,12 @@ const App: React.FC = () => {
           <SearchField onSearch={handleSearch} />
         </View>
       </View>
-      <ItemsList ref={flatListRef} items={items} onDelete={handleDelete} />
+      <ItemsList ref={flatListRef} items={flattenItems(items)} onDelete={handleDelete} />
       <ItemForm
         isVisible={isFormVisible}
         onSubmit={addItem}
         onClose={() => setIsFormVisible(false)}
+        items={items}
       />
     </SafeAreaView>
   );

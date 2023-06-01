@@ -3,8 +3,12 @@ import { FlatList } from 'react-native';
 import ListItem from './ListItem';
 
 interface Item {
+  id: number,
+  condid: string;
   name: string;
-  description: string;
+  type: string;
+  entries: boolean;
+  children: Item[];
 }
 
 interface ItemsListProps {
@@ -24,7 +28,7 @@ const ItemsList = React.forwardRef<FlatList, ItemsListProps>(({ items, onDelete 
           onDelete={() => onDelete(item)} 
         />
       )}
-      keyExtractor={(item) => item.name}
+      keyExtractor={(item) => item.id}
     />
   );
 });
