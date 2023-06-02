@@ -26,7 +26,7 @@ const YPosition = 80;
 const newHeight = fullHeight - YPosition;
 
 const ItemForm: React.FC<ItemFormProps> = ({ isVisible, onSubmit, items, setHandleSubmit }) => {
-  const [condid, setCondid] = useState('');
+  const [condid, setCondid] = useState('1');
   const [name, setName] = useState('');
   const [type, setType] = useState('Receita');
   const [entries, setEntries] = useState('true');
@@ -65,7 +65,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ isVisible, onSubmit, items, setHand
     } else {
       let lastCondid = items[items.length - 1]?.condid;
       let incrementedCondid = (Number(lastCondid) + 1).toString();
-      setCondid(!isNaN(Number(condid)) ? incrementedCondid : "1");
+      setCondid(!isNaN(Number(lastCondid)) ? incrementedCondid : "");
     }
   }, [selectedItem]);
 
