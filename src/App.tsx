@@ -1,7 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { SafeAreaView, FlatList, StyleSheet, View, Text } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import SearchField from './components/SearchField';
 import AddButton from './components/AddButton';
+import ReverseButton from './components/ReverseButton';
+import SubmitButton from './components/SubmitButton';
 import ItemsList from './components/ItemsList';
 import ItemForm from './components/ItemForm';
 
@@ -20,20 +23,66 @@ const initialItems: Item[] = [
   { id: 2, condid: '2', name: 'Despesas', type: 'Despesa', entries: false, children: []}
 ];
 
+
+
 const App: React.FC = () => {
-  const [items, setItems] = useState(initialItems);
+  const [items, setItems] = useState<Item[]>([]);
   const [searchText, setSearchText] = useState('');
   const flatListRef = useRef<FlatList>(null);
   const [isFormVisible, setIsFormVisible] = useState(false);
+  const [titleText, setTitleText] = useState('Plano de Contas');
+  const [isFormValid, setIsFormValid] = useState(false);
+  
 
+  const [handleSubmitForm, setHandleSubmitForm] = useState<() => void>(() => () => {}); 
+
+  const handleFormSubmit = () => {
+    handleSubmitForm(); 
+    setIsFormVisible(false); 
+    setTitleText('Plano de Contas');
+  };
+
+  const storeItems = async (newItems: Item[]) => {
+    try {
+      await AsyncStorage.setItem('@items', JSON.stringify(newItems));
+    } catch (error) {
+      // Error saving data
+      console.log(error);
+    }
+  };
+  
+  const getStoredItems = async () => {
+    try {
+      const storedItems = await AsyncStorage.getItem('@items');
+      if (storedItems !== null) {
+        // We have data!!
+        return JSON.parse(storedItems);
+      }
+    } catch (error) {
+      // Error retrieving data
+      console.log(error);
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      const storedItems = await getStoredItems();
+      if (storedItems) {
+        setItems(storedItems);
+      } else {
+        setItems(initialItems);
+      }
+    };
+    fetchItems();
+  }, []);
+
+  useEffect(() => {
+    storeItems(items);
+  }, [items]);
 
   const handleSearch = (text: string) => {
     setSearchText(text);
-    if (text) {
-      setItems(initialItems.filter((item) => item.name.toLowerCase().includes(text.toLowerCase())));
-    } else {
-      setItems(initialItems);
-    }
   };
 
   const itemLimit = 5;
@@ -76,27 +125,49 @@ const App: React.FC = () => {
     setIsFormVisible(false);
   };
 
+  const deleteChild = (items: Item[], itemToDelete: Item): Item[] => {
+    return items.reduce((acc: Item[], item) => {
+      if (item.id === itemToDelete.id) {
+        return acc;
+      }
+      if (item.children.length > 0) {
+        return [...acc, { ...item, children: deleteChild(item.children, itemToDelete) }];
+      }
+      return [...acc, item];
+    }, []);
+  };
+  
   const handleDelete = (itemToDelete: Item) => {
-    setItems(items.filter(item => item !== itemToDelete));
+    setItems(prevItems => deleteChild(prevItems, itemToDelete));
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>Your App Name</Text>
-          <AddButton onAdd={() => setIsFormVisible(true)} />
+          <View style={{...styles.leftContainer, zIndex: 1}}>
+            {isFormVisible && <ReverseButton onReverse={() => {setIsFormVisible(false); setTitleText('Plano de Contas')} } />}
+            <Text style={styles.title}>{titleText}</Text>
+          </View>
+          
+          <View style={{zIndex: 1}}>
+            {!isFormVisible && <AddButton onAdd={() => {setIsFormVisible(true); setTitleText('Inserir Conta')} } />}
+            {/*isFormVisible && <SubmitButton onSubmit={handleFormSubmit} disabled={!isFormValid}/>*/}
+          </View>
         </View>
         <View>
           <SearchField onSearch={handleSearch} />
         </View>
       </View>
-      <ItemsList ref={flatListRef} items={flattenItems(items)} onDelete={handleDelete} />
+      <ItemsList ref={flatListRef} items={flattenItems(items).filter((item) => item.name.toLowerCase().includes(searchText.toLowerCase()))} onDelete={handleDelete} />
+
       <ItemForm
         isVisible={isFormVisible}
         onSubmit={addItem}
         onClose={() => setIsFormVisible(false)}
         items={items}
+        setHandleSubmit={setHandleSubmitForm}
+        setFormValid={setIsFormValid}
       />
     </SafeAreaView>
   );
@@ -105,10 +176,13 @@ const App: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 20,
+    padding: 20,
+    backgroundColor: '#622490'
   },
   headerContainer: {
     padding: 10,
+    paddingLeft: 0,
+    paddingRight: 0,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -116,9 +190,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+  leftContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: 'white'
   }
 });
 

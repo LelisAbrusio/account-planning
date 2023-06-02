@@ -3,13 +3,14 @@ import { TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 interface AddButtonProps {
-  onAdd: () => void;
+  onSubmit: () => void;
+  disabled: boolean;
 }
 
-const AddButton: React.FC<AddButtonProps> = ({ onAdd }) => {
+const SubmitButton: React.FC<AddButtonProps> = ({ onSubmit, disabled }) => {
   return (
-    <TouchableOpacity style={styles.button} onPress={onAdd}>
-      <Icon name="add" size={30} color="#FFFFFF" />
+    <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={disabled}>
+      <Icon name="check" size={30} color="#FFFFFF" />
     </TouchableOpacity>
   );
 };
@@ -25,4 +26,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddButton;
+export default SubmitButton;
