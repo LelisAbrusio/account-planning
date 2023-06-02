@@ -46,7 +46,6 @@ const App: React.FC = () => {
     try {
       await AsyncStorage.setItem('@items', JSON.stringify(newItems));
     } catch (error) {
-      // Error saving data
       console.log(error);
     }
   };
@@ -55,11 +54,9 @@ const App: React.FC = () => {
     try {
       const storedItems = await AsyncStorage.getItem('@items');
       if (storedItems !== null) {
-        // We have data!!
         return JSON.parse(storedItems);
       }
     } catch (error) {
-      // Error retrieving data
       console.log(error);
     }
     return null;

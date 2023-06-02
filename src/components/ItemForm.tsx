@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Alert, View, TextInput, Button, StyleSheet, Dimensions, Animated } from 'react-native';
+import { Alert, View, Text, TextInput, Button, StyleSheet, Dimensions, Animated } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
 interface Item {
@@ -118,6 +118,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ isVisible, onSubmit, items, setHand
 
   return (
     <Animated.View style={[styles.container, { top: slideAnim }]} >
+      <Text style={styles.titles}>Conta pai</Text>
       <View style={styles.pickerContainer}>
         <Picker selectedValue={selectedItem?.name || 'none'} onValueChange={(value) => setSelectedItem(value === 'none' ? null : flattenItems(items).find((item) => item.name === value) || null)}>
           <Picker.Item label="Nenhum" value="none" />
@@ -126,19 +127,23 @@ const ItemForm: React.FC<ItemFormProps> = ({ isVisible, onSubmit, items, setHand
           ))}
         </Picker>
       </View>
+
+      <Text style={styles.titles}>Código</Text>
       <TextInput style={[styles.inputContainer]} value={condid} onChangeText={setCondid}/>
+
+      <Text style={styles.titles}>Nome</Text>
       <TextInput style={[styles.inputContainer]} value={name} onChangeText={setName} placeholder="Name" />
       
+      <Text style={styles.titles}>Tipo</Text>
       <View style={styles.pickerContainer}>
-
         <Picker selectedValue={type} onValueChange={setType}>
           <Picker.Item label="Receita" value="Receita" />
           <Picker.Item label="Despesa" value="Despesa" />
         </Picker>
       </View>
 
+      <Text style={styles.titles}>Aceita lançamentos</Text>
       <View style={styles.pickerContainer}>
-
         <Picker selectedValue={entries} onValueChange={setEntries}>
           <Picker.Item label="Sim" value="true" />
           <Picker.Item label="Não" value="false" />
@@ -200,7 +205,18 @@ const styles = StyleSheet.create({
   },
   button:{
     borderRadius: 16,
-  }
+  },
+  titles: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 15,
+    paddingTop: 0,
+    paddingBottom: 0,
+    borderRadius: 16,
+    margin: 20,
+    marginTop: 0,
+    marginBottom: 0,
+  },
 });
 
 export default ItemForm;
